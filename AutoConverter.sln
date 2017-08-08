@@ -3,7 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26711.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoConverter", "AutoConverter\AutoConverter.csproj", "{7542EEBB-7927-4AE9-80DA-F7AB40DAA57E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoConverter", "AutoConverter\AutoConverter.csproj", "{7542EEBB-7927-4AE9-80DA-F7AB40DAA57E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csproj", "{252618C5-4A6E-4441-845C-5D603E28ED00}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher", "DirectoryWatcher\DirectoryWatcher.csproj", "{3555867F-20D0-4CBE-AB6A-95A1DBC3770E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher.UnitTests", "DirectoryWatcher.UnitTests\DirectoryWatcher.UnitTests.csproj", "{509ECE43-1CA7-41A7-98E2-587BDABEDDC2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoConverter.Tests", "AutoConverter.Tests\AutoConverter.Tests.csproj", "{65BD9A1F-16DF-476C-A822-E9DCA58A6363}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HandbrakeMock", "HandbrakeMock\HandbrakeMock.csproj", "{45E14D7D-6D6F-48CD-B2D8-98E5619A9C18}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +25,26 @@ Global
 		{7542EEBB-7927-4AE9-80DA-F7AB40DAA57E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7542EEBB-7927-4AE9-80DA-F7AB40DAA57E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7542EEBB-7927-4AE9-80DA-F7AB40DAA57E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{252618C5-4A6E-4441-845C-5D603E28ED00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{252618C5-4A6E-4441-845C-5D603E28ED00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{252618C5-4A6E-4441-845C-5D603E28ED00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{252618C5-4A6E-4441-845C-5D603E28ED00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3555867F-20D0-4CBE-AB6A-95A1DBC3770E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3555867F-20D0-4CBE-AB6A-95A1DBC3770E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3555867F-20D0-4CBE-AB6A-95A1DBC3770E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3555867F-20D0-4CBE-AB6A-95A1DBC3770E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{509ECE43-1CA7-41A7-98E2-587BDABEDDC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{509ECE43-1CA7-41A7-98E2-587BDABEDDC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{509ECE43-1CA7-41A7-98E2-587BDABEDDC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{509ECE43-1CA7-41A7-98E2-587BDABEDDC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65BD9A1F-16DF-476C-A822-E9DCA58A6363}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65BD9A1F-16DF-476C-A822-E9DCA58A6363}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65BD9A1F-16DF-476C-A822-E9DCA58A6363}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65BD9A1F-16DF-476C-A822-E9DCA58A6363}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45E14D7D-6D6F-48CD-B2D8-98E5619A9C18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45E14D7D-6D6F-48CD-B2D8-98E5619A9C18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45E14D7D-6D6F-48CD-B2D8-98E5619A9C18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45E14D7D-6D6F-48CD-B2D8-98E5619A9C18}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
