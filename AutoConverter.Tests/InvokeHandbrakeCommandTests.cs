@@ -30,8 +30,8 @@ namespace AutoConverter.Tests
         [Fact]
         public void ConstructorThrowsOnNullOrEmptyArray()
         {
-            Assert.Throws<ArgumentException>(() => new InvokeHandbrakeCommand(new string[] { }, 100, new Mock<IPathProjection>().Object));
-            Assert.Throws<ArgumentException>(() => new InvokeHandbrakeCommand(null, 100, new Mock<IPathProjection>().Object));
+            Assert.Throws<ArgumentException>(() => new InvokeHandbrakeCommand(new string[] { }, 100));
+            Assert.Throws<ArgumentException>(() => new InvokeHandbrakeCommand(null, 100));
         }
 
         [Theory]
@@ -50,12 +50,12 @@ namespace AutoConverter.Tests
         public void CanExecuteReturnsFalseForFileNamesWithAppendedStringBeforeExtension()
         {
             var sut = CommandFixture.Command;
-            Assert.False(sut.CanExecute(new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "test__ADMIN__.mp4"))));
+            Assert.False(sut.CanExecute(new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "test__CONVERTED__.mp4"))));
         }
 
         [Theory]
-        [InlineData("__ADMIN__test.mp4")]
-        [InlineData("te__ADMIN__st.mp4")]
+        [InlineData("__CONVERTED__test.mp4")]
+        [InlineData("te__CONVERTED__st.mp4")]
         public void CanExecuteReturnsTrueWhenAppendedStringIsNotLocatedBeforeExtension(string filename)
         {
             var sut = CommandFixture.Command;
@@ -101,7 +101,7 @@ namespace AutoConverter.Tests
         {
             var sut = CommandFixture.Command;
             var path = Path.Combine(Directory.GetCurrentDirectory(), "test.mkv");
-            var pathCreated = Path.Combine(Directory.GetCurrentDirectory(), "test__ADMIN__.mkv");
+            var pathCreated = Path.Combine(Directory.GetCurrentDirectory(), "test__CONVERTED__.mkv");
             var cts = new CancellationTokenSource();
             cts.Cancel();
 
@@ -124,7 +124,7 @@ namespace AutoConverter.Tests
         {
             var sut = CommandFixture.Command;
             var path = Path.Combine(Directory.GetCurrentDirectory(), "test.mkv");
-            var pathCreated = Path.Combine(Directory.GetCurrentDirectory(), "test__ADMIN__.mkv");
+            var pathCreated = Path.Combine(Directory.GetCurrentDirectory(), "test__CONVERTED__.mkv");
             await sut.ExecuteAsync(new FileInfo(path), CancellationToken.None);
             Assert.True(File.Exists(pathCreated));
 

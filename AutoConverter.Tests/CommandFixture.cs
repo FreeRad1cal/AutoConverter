@@ -9,8 +9,7 @@ namespace AutoConverter.Tests
 
         public CommandFixture()
         {
-            _command = new InvokeHandbrakeCommand(new[] {".mp4", ".mkv"}, 500,
-                new FilenameAppendPathProjection("__ADMIN__"));
+            _command = new InvokeHandbrakeCommand(new[] {".mp4", ".mkv"}, 500);
         }
 
         public ICommand Command => _command;

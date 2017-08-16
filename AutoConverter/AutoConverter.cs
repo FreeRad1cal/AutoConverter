@@ -25,9 +25,10 @@ namespace AutoConverter
 
                 var dirPath = dirPathOption.Value();
                 var extensions = new[] { ".mkv", ".mpg" };
-                var command = new InvokeHandbrakeCommand(extensions, 500, new FilenameAppendPathProjection("__CONVERTED__"));
-                command.SomethingHappened += SomethingHappenedCallback;
+                var command = new InvokeHandbrakeCommand(extensions, 500);
+                command.ExecutionStatusChanged += ExecutionStatusChangedCallback;
                 var watcher = new CommandExecutingDirectoryWatcher(dirPath, command);
+                Console.WriteLine($"Watching {dirPath}");
                 await watcher.Watch().ConfigureAwait(true);
 
                 return 0;
@@ -44,15 +45,20 @@ namespace AutoConverter
             }
         }
 
-        private static void SomethingHappenedCallback(object obj, EventArgs args)
+        private static void ExecutionStatusChangedCallback(object obj, EventArgs args)
         {
-            switch (args)
+            var executionStatusChangedEventArgs = (ExecutionStatusChangedEventArgs) args;
+
+            switch (executionStatusChangedEventArgs.ConversionEvent)
             {
-                case ConversionStartedEventArgs val:
-                    Console.WriteLine($"Converting {val.Path}...");
+                case ConversionEvent.Started:
+                    Console.WriteLine($"Converting {executionStatusChangedEventArgs.Path}...");
                     break;
-                case ConversionCompletedEventArgs val:
+                case ConversionEvent.Completed:
                     Console.WriteLine("Conversion completed.");
+                    break;
+                case ConversionEvent.Cancelled:
+                    Console.WriteLine("Conversion cancellent");
                     break;
                 default:
                     break;

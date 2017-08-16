@@ -13,10 +13,10 @@ namespace AutoConverter
     public class InvokeHandbrakeCommand : ICommand
     {
         private readonly IEnumerable<string> _extensions;
-        private readonly uint _maxMb;
+        private readonly uint _maxSize;
         private readonly IPathProjection _pathProjection;
 
-        public InvokeHandbrakeCommand(IEnumerable<string> extensions, uint maxMb, IPathProjection pathProjection)
+        public InvokeHandbrakeCommand(IEnumerable<string> extensions, uint maxSize)
         {
             if (extensions == null || !extensions.Any())
             {
@@ -24,8 +24,8 @@ namespace AutoConverter
             }
 
             _extensions = extensions.ToArray();
-            _maxMb = maxMb;
-            _pathProjection = pathProjection;
+            _maxSize = maxSize;
+            _pathProjection = new FilenameAppendPathProjection("__CONVERTED__");
         }
 
         public void Execute(object context)
@@ -36,7 +36,7 @@ namespace AutoConverter
         public bool CanExecute(object context)
         {
             var fileInfo = (FileInfo)context;
-            return _extensions.Contains(fileInfo.Extension) && Regex.IsMatch(fileInfo.Name, $@"^[\w\s]+{_pathProjection}.\w+$") && fileInfo.Exists && fileInfo.Length >= _maxMb;
+            return _extensions.Contains(fileInfo.Extension) && fileInfo.Exists && !Regex.IsMatch(fileInfo.Name, @"^[\w\s]+__CONVERTED__.\w+$") && fileInfo.Length >= _maxSize;
         }
 
         public async Task ExecuteAsync(object context)
@@ -52,17 +52,27 @@ namespace AutoConverter
             }
 
             var fileInfo = (FileInfo)context;
-            var startInfo = new ProcessStartInfo("HandBrakeCLI.exe",
-                $"-i {fileInfo.FullName} -o {_pathProjection.GetPath(fileInfo.FullName)}");
-            startInfo.CreateNoWindow = true;
+            var startInfo = new ProcessStartInfo(@"C:\Users\bdk89\Source\Repos\AutoConverter\HandbrakeMock\bin\Debug\netcoreapp2.0\win10-x64\HandbrakeMock.exe",
+                $"-i {fileInfo.FullName} -o {_pathProjection.GetPath(fileInfo.FullName)}")
+            {
+                CreateNoWindow = true
+            };
 
-            OnExecuted(fileInfo.FullName);
+            if (ct.IsCancellationRequested)
+            {
+                OnExecutionStatusChanged(fileInfo.FullName, ConversionEvent.Cancelled);
+                await Task.FromCanceled(ct);
+            }
+
             using (var process = Process.Start(startInfo))
             {
+                process.EnableRaisingEvents = true;
+                OnExecutionStatusChanged(fileInfo.FullName, ConversionEvent.Started);
                 var tcs = new TaskCompletionSource<bool>();
                 ct.Register(() =>
                 {
                     process.Kill();
+                    process.WaitForExit();
                     tcs.TrySetCanceled(ct);
                 });
                 process.Exited += (obj, args) => tcs.TrySetResult(true);
@@ -74,16 +84,11 @@ namespace AutoConverter
             }
         }
 
-        protected virtual void OnExecuted(string path)
+        protected virtual void OnExecutionStatusChanged(string path, ConversionEvent e)
         {
-            SomethingHappened?.Invoke(this, new ConversionStartedEventArgs(path));
+            ExecutionStatusChanged?.Invoke(this, new ExecutionStatusChangedEventArgs(path, e));
         }
 
-        protected virtual void OnCompleted(string inputPath, string outputPath)
-        {
-            SomethingHappened?.Invoke(this, new ConversionCompletedEventArgs(inputPath, outputPath));
-        }
-
-        public event EventHandler SomethingHappened;
+        public event EventHandler ExecutionStatusChanged;
     }
 }
