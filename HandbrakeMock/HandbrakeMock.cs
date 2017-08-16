@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.CommandLineUtils;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace HandbrakeMock
 {
@@ -17,11 +18,16 @@ namespace HandbrakeMock
             var outputPathOption = app.Option("-o|--output", "The output path",
                 CommandOptionType.SingleValue);
 
-
-            app.OnExecute(() =>
+            app.OnExecute(async () =>
             {
                 var inputPath = inputPathOption.Value();
                 var outputPath = outputPathOption.Value();
+                if (inputPath == null || outputPath == null)
+                {
+                    app.ShowHelp();
+                    return 1;
+                }
+
 
                 if (!Path.IsPathRooted(inputPath))
                 {
@@ -38,13 +44,14 @@ namespace HandbrakeMock
                 }
 
                 var input = new FileInfo(inputPath);
-                using (var stream = new FileStream(outputPath, FileMode.Create, FileAccess.Write))
+                using (var stream = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
                 {
                     var outputSize = (int) input.Length / 2;
                     using (var writer = new BinaryWriter(stream))
                     {
-                        writer.Seek(outputSize - 2, SeekOrigin.Begin);
+                        writer.Seek(outputSize - 1, SeekOrigin.Begin);
                         writer.Write((byte)0);
+                        await Task.Delay(5000);
                     }
                 }
 

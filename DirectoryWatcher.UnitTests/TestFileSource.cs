@@ -20,7 +20,7 @@ namespace DirectoryWatcher.UnitTests
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    writer.Seek(size - 2, SeekOrigin.Begin);
+                    writer.Seek(size - 1, SeekOrigin.Begin);
                     writer.Write((byte)0);
                 }
             }

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AutoConverter": {
+      "commandName": "Project",
+      "commandLineArgs": "-p c:\\test"
+    }
+  }
+}

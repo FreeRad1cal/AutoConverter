@@ -10,6 +10,6 @@ namespace Common
         Task ExecuteAsync(object context);
         Task ExecuteAsync(object context, CancellationToken ct);
         bool CanExecute(object context);
-        event EventHandler OnExecute;
+        event EventHandler SomethingHappened;
     }
 }

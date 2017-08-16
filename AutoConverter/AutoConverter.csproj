@@ -3,6 +3,9 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <StartupObject>AutoConverter.AutoConverter</StartupObject>
+    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\DirectoryWatcher\DirectoryWatcher.csproj" />
   </ItemGroup>
 

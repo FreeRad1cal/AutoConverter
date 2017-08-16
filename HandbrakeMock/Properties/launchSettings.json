@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "HandbrakeMock": {
+      "commandName": "Project",
+      "commandLineArgs": "-i C:\\test.txt -o C:\\output.txt"
+    }
+  }
+}

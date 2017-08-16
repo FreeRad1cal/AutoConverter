@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AutoConverter\AutoConverter.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\DirectoryWatcher.UnitTests\DirectoryWatcher.UnitTests.csproj" />
   </ItemGroup>
 
