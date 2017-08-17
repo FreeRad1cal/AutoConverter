@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.CommandLineUtils;
 using DirectoryWatcher;
 using System;
+using System.IO;
 
 namespace AutoConverter
 {
@@ -17,18 +18,17 @@ namespace AutoConverter
 
             app.OnExecute(async () =>
             {
-                if (dirPathOption.Value() == null)
+                var dirPath = dirPathOption.Value();
+                if (dirPath == null)
                 {
-                    app.ShowHelp();
-                    return 1;
+                    dirPath = Directory.GetCurrentDirectory();
                 }
 
-                var dirPath = dirPathOption.Value();
                 var extensions = new[] { ".mkv", ".mp4" };
-                var command = new InvokeHandbrakeCommand(extensions, 500);
+                var command = new InvokeHandbrakeCommand(extensions, 500*1024);
                 command.ExecutionStatusChanged += ExecutionStatusChangedCallback;
                 var watcher = new CommandExecutingDirectoryWatcher(dirPath, command);
-                Console.WriteLine($"Watching {dirPath}");
+                Console.WriteLine($"Watching {dirPath}...");
                 await watcher.Watch().ConfigureAwait(true);
 
                 return 0;
@@ -52,17 +52,22 @@ namespace AutoConverter
             switch (executionStatusChangedEventArgs.ConversionEvent)
             {
                 case ExecutionEvent.Started:
-                    Console.WriteLine($"Converting {executionStatusChangedEventArgs.Path}...");
+                    Console.WriteLine($"{GetTimestamp()} Converting {executionStatusChangedEventArgs.Path}...");
                     break;
                 case ExecutionEvent.Completed:
-                    Console.WriteLine("Conversion completed.");
+                    Console.WriteLine($"{GetTimestamp()} Conversion of {executionStatusChangedEventArgs.Path} completed");
                     break;
                 case ExecutionEvent.Cancelled:
-                    Console.WriteLine("Conversion cancellent");
+                    Console.WriteLine($"{GetTimestamp()} Conversion of {executionStatusChangedEventArgs.Path} cancelled");
                     break;
                 default:
                     break;
             }
+        }
+
+        private static string GetTimestamp()
+        {
+            return $"[{DateTime.Now.ToShortTimeString()}]";
         }
     }
 }

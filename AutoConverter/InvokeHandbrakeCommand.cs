@@ -13,10 +13,10 @@ namespace AutoConverter
     public class InvokeHandbrakeCommand : ICommand
     {
         private readonly IEnumerable<string> _extensions;
-        private readonly uint _maxSize;
+        private readonly uint _maxBytes;
         private readonly IPathProjection _pathProjection;
 
-        public InvokeHandbrakeCommand(IEnumerable<string> extensions, uint maxSize)
+        public InvokeHandbrakeCommand(IEnumerable<string> extensions, uint maxBytes)
         {
             if (extensions == null || !extensions.Any())
             {
@@ -24,7 +24,7 @@ namespace AutoConverter
             }
 
             _extensions = extensions.ToArray();
-            _maxSize = maxSize;
+            _maxBytes = maxBytes;
             _pathProjection = new FilenameAppendPathProjection("__CONVERTED__");
         }
 
@@ -36,7 +36,7 @@ namespace AutoConverter
         public bool CanExecute(object context)
         {
             var fileInfo = (FileInfo)context;
-            return _extensions.Contains(fileInfo.Extension) && fileInfo.Exists && !Regex.IsMatch(fileInfo.Name, @"^[\w\s]+__CONVERTED__.\w+$") && fileInfo.Length >= _maxSize;
+            return _extensions.Contains(fileInfo.Extension) && fileInfo.Exists && !Regex.IsMatch(fileInfo.Name, @"^.+__CONVERTED__\.\w+$") && fileInfo.Length >= _maxBytes;
         }
 
         public async Task ExecuteAsync(object context)
@@ -52,10 +52,11 @@ namespace AutoConverter
             }
 
             var fileInfo = (FileInfo)context;
-            var startInfo = new ProcessStartInfo(@"C:\Users\bdk89\Source\Repos\AutoConverter\HandbrakeMock\bin\Debug\netcoreapp2.0\win10-x64\HandbrakeMock.exe",
+            var startInfo = new ProcessStartInfo("handbrakecli",
                 $"-i {fileInfo.FullName} -o {_pathProjection.GetPath(fileInfo.FullName)}")
             {
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                UseShellExecute = true
             };
 
             if (ct.IsCancellationRequested)
@@ -79,6 +80,11 @@ namespace AutoConverter
             });
             process.Exited += (obj, args) =>
             {
+                if (process.ExitCode != 0 && tcs.TrySetCanceled())
+                {
+                    OnExecutionStatusChanged(fileInfo.FullName, ExecutionEvent.Cancelled);
+                }
+
                 if (tcs.TrySetResult(true))
                 {
                     OnExecutionStatusChanged(fileInfo.FullName, ExecutionEvent.Completed);
