@@ -1,6 +1,6 @@
 ﻿namespace AutoConverter
 {
-    public enum ConversionEvent
+    public enum ExecutionEvent
     {
         Completed, Cancelled, Started
     }

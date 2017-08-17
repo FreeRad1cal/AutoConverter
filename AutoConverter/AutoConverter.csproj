@@ -5,7 +5,6 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <StartupObject>AutoConverter.AutoConverter</StartupObject>
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
-    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>

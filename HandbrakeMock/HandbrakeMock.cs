@@ -51,7 +51,7 @@ namespace HandbrakeMock
                     {
                         writer.Seek(outputSize - 1, SeekOrigin.Begin);
                         writer.Write((byte)0);
-                        await Task.Delay(5000);
+                        await Task.Delay(1000);
                     }
                 }
 

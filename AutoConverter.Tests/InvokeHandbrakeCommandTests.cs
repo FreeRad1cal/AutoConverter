@@ -8,6 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoConverter;
 using Xunit.Sdk;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace AutoConverter.Tests
 {
@@ -129,6 +131,81 @@ namespace AutoConverter.Tests
             Assert.True(File.Exists(pathCreated));
 
             File.Delete(pathCreated);
+        }
+
+        [Fact]
+        [UseTestFile("test.mkv", 1000)]
+        public async Task ExecutionStatusChangedEventTriggeredWhenProcessStarted()
+        {
+            var sut = CommandFixture.Command;
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "test.mkv");
+            bool eventTriggered = false;
+            sut.ExecutionStatusChanged += (obj, args) =>
+            {
+                var result = (args as ExecutionStatusChangedEventArgs).ConversionEvent;
+                if (result == ExecutionEvent.Started)
+                {
+                    eventTriggered = true;
+                }
+            };
+
+            foreach (var i in Enumerable.Range(0, 50))
+            {
+                eventTriggered = false;
+                var task = sut.ExecuteAsync(new FileInfo(path), CancellationToken.None);
+                await Task.Delay(200);
+                Assert.True(eventTriggered);
+                Assert.False(task.IsCanceled || task.IsFaulted);
+            }
+        }
+
+        [Fact]
+        [UseTestFile("test.mkv", 1000)]
+        public async Task ExecutionStatusChangedEventTriggeredWhenProcessCancelled()
+        {
+            var sut = CommandFixture.Command;
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "test.mkv");
+            
+            foreach (var i in Enumerable.Range(0, 50))
+            {
+                var calls = new List<ExecutionEvent>();
+                sut.ExecutionStatusChanged += (obj, args) =>
+                {
+                    calls.Add((args as ExecutionStatusChangedEventArgs).ConversionEvent);
+                };
+                var tcs = new CancellationTokenSource();
+                var task = sut.ExecuteAsync(new FileInfo(path), tcs.Token);
+                await Task.Delay(500).ContinueWith(t => tcs.Cancel());
+                Assert.True(calls.Count == 2, $"the number of calls is {calls.Count}, not 2");
+                Assert.True(calls[0] == ExecutionEvent.Started, $"call 0 is {calls[0]}, not 'started");
+                Assert.True(calls[1] == ExecutionEvent.Cancelled, $"call 1 is {calls[1]}, not 'cancelled");
+                Assert.True(task.IsCanceled, "the task is not cancelled");
+            }
+        }
+
+        [Fact]
+        [UseTestFile("test.mkv", 1000)]
+        public async Task ExecutionStatusChangedEventTriggeredWhenProcessCompletes()
+        {
+            var sut = CommandFixture.Command;
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "test.mkv");
+            var pathCreated = Path.Combine(Directory.GetCurrentDirectory(), "test__CONVERTED__.mkv");
+
+            foreach (var i in Enumerable.Range(0, 50))
+            {
+                var calls = new List<ExecutionEvent>();
+                sut.ExecutionStatusChanged += (obj, args) =>
+                {
+                    calls.Add((args as ExecutionStatusChangedEventArgs).ConversionEvent);
+                };
+                var task = sut.ExecuteAsync(new FileInfo(path), CancellationToken.None);
+                await task;
+                Assert.True(calls.Count == 2, $"the number of calls is {calls.Count}, not 2");
+                Assert.True(calls[0] == ExecutionEvent.Started, $"call 0 is {calls[0]}, not 'started");
+                Assert.True(calls[1] == ExecutionEvent.Completed, $"call 1 is {calls[1]}, not 'completed");
+                Assert.True(task.IsCompletedSuccessfully, "the task is not completed successfully");
+                File.Delete(pathCreated);
+            }
         }
     }
 }

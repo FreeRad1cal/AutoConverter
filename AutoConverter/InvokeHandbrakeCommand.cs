@@ -60,31 +60,34 @@ namespace AutoConverter
 
             if (ct.IsCancellationRequested)
             {
-                OnExecutionStatusChanged(fileInfo.FullName, ConversionEvent.Cancelled);
+                OnExecutionStatusChanged(fileInfo.FullName, ExecutionEvent.Cancelled);
                 await Task.FromCanceled(ct);
             }
 
-            using (var process = Process.Start(startInfo))
+            var process = Process.Start(startInfo);
+            process.EnableRaisingEvents = true;
+            OnExecutionStatusChanged(fileInfo.FullName, ExecutionEvent.Started);
+            var tcs = new TaskCompletionSource<bool>();
+            ct.Register(() =>
             {
-                process.EnableRaisingEvents = true;
-                OnExecutionStatusChanged(fileInfo.FullName, ConversionEvent.Started);
-                var tcs = new TaskCompletionSource<bool>();
-                ct.Register(() =>
+                if (tcs.TrySetCanceled(ct))
                 {
                     process.Kill();
                     process.WaitForExit();
-                    tcs.TrySetCanceled(ct);
-                });
-                process.Exited += (obj, args) => tcs.TrySetResult(true);
-                if (process.HasExited)
-                {
-                    tcs.TrySetResult(true);
+                    OnExecutionStatusChanged(fileInfo.FullName, ExecutionEvent.Cancelled);
                 }
-                await tcs.Task;
-            }
+            });
+            process.Exited += (obj, args) =>
+            {
+                if (tcs.TrySetResult(true))
+                {
+                    OnExecutionStatusChanged(fileInfo.FullName, ExecutionEvent.Completed);
+                }
+            };
+            await tcs.Task;
         }
 
-        protected virtual void OnExecutionStatusChanged(string path, ConversionEvent e)
+        protected virtual void OnExecutionStatusChanged(string path, ExecutionEvent e)
         {
             ExecutionStatusChanged?.Invoke(this, new ExecutionStatusChangedEventArgs(path, e));
         }

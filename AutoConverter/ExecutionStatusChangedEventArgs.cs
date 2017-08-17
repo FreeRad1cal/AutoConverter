@@ -2,15 +2,15 @@
 
 namespace AutoConverter
 {
-    internal class ExecutionStatusChangedEventArgs : EventArgs
+    public class ExecutionStatusChangedEventArgs : EventArgs
     {
         private readonly string _path;
-        private readonly ConversionEvent _conversionEvent;
+        private readonly ExecutionEvent _conversionEvent;
 
         public string Path => _path;
-        public ConversionEvent ConversionEvent => _conversionEvent;
+        public ExecutionEvent ConversionEvent => _conversionEvent;
 
-        public ExecutionStatusChangedEventArgs(string path, ConversionEvent e)
+        public ExecutionStatusChangedEventArgs(string path, ExecutionEvent e)
         {
             _path = path;
             _conversionEvent = e;
