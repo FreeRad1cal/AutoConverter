@@ -13,10 +13,11 @@ namespace AutoConverter
     public class InvokeHandbrakeCommand : ICommand
     {
         private readonly IEnumerable<string> _extensions;
-        private readonly uint _maxBytes;
+        private readonly uint _minBytes;
+        private readonly string _handbrakeCliPath;
         private readonly IPathProjection _pathProjection;
 
-        public InvokeHandbrakeCommand(IEnumerable<string> extensions, uint maxBytes)
+        public InvokeHandbrakeCommand(IEnumerable<string> extensions, uint minBytes, string handbrakeCliPath)
         {
             if (extensions == null || !extensions.Any())
             {
@@ -24,7 +25,8 @@ namespace AutoConverter
             }
 
             _extensions = extensions.ToArray();
-            _maxBytes = maxBytes;
+            _minBytes = minBytes;
+            _handbrakeCliPath = handbrakeCliPath;
             _pathProjection = new FilenameAppendPathProjection("__CONVERTED__");
         }
 
@@ -36,7 +38,7 @@ namespace AutoConverter
         public bool CanExecute(object context)
         {
             var fileInfo = (FileInfo)context;
-            return _extensions.Contains(fileInfo.Extension) && fileInfo.Exists && !Regex.IsMatch(fileInfo.Name, @"^.+__CONVERTED__\.\w+$") && fileInfo.Length >= _maxBytes;
+            return _extensions.Contains(fileInfo.Extension) && fileInfo.Exists && !Regex.IsMatch(fileInfo.Name, @"^.+__CONVERTED__\.\w+$") && fileInfo.Length >= _minBytes;
         }
 
         public async Task ExecuteAsync(object context)
@@ -52,8 +54,8 @@ namespace AutoConverter
             }
 
             var fileInfo = (FileInfo)context;
-            var startInfo = new ProcessStartInfo("handbrakecli",
-                $"-i {fileInfo.FullName} -o {_pathProjection.GetPath(fileInfo.FullName)}")
+            var startInfo = new ProcessStartInfo(_handbrakeCliPath,
+                $"-i \"{fileInfo.FullName}\" -o \"{_pathProjection.GetPath(fileInfo.FullName)}\"")
             {
                 CreateNoWindow = true,
                 UseShellExecute = true

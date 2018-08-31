@@ -2,47 +2,59 @@
 using DirectoryWatcher;
 using System;
 using System.IO;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace AutoConverter
 {
     class AutoConverter
     {
-        static int Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            var app = new CommandLineApplication(throwOnUnexpectedArg: true);
+            var config = GetConfiguration(args);
 
-            app.HelpOption("-?|-h|--help");
+            var command = new InvokeHandbrakeCommand(config.Extensions, 500 * 1024, config.HandbrakeCliPath);
+            command.ExecutionStatusChanged += ExecutionStatusChangedCallback;
 
-            var dirPathOption = app.Option("-p|--path", "The path to the folder to be watched",
-                CommandOptionType.SingleValue);
+            var watcher = new CommandExecutingDirectoryWatcher(config.WatchedPath, command);
+            Console.WriteLine($"Watching {config.WatchedPath}...");
 
-            app.OnExecute(async () =>
-            {
-                var dirPath = dirPathOption.Value();
-                if (dirPath == null)
-                {
-                    dirPath = Directory.GetCurrentDirectory();
-                }
+            await watcher.Watch().ConfigureAwait(true);
 
-                var extensions = new[] { ".mkv", ".mp4" };
-                var command = new InvokeHandbrakeCommand(extensions, 500*1024);
-                command.ExecutionStatusChanged += ExecutionStatusChangedCallback;
-                var watcher = new CommandExecutingDirectoryWatcher(dirPath, command);
-                Console.WriteLine($"Watching {dirPath}...");
-                await watcher.Watch().ConfigureAwait(true);
+            //var app = new CommandLineApplication(throwOnUnexpectedArg: true);
 
-                return 0;
-            });
+            //app.HelpOption("-?|-h|--help");
 
-            try
-            {
-                return app.Execute(args);
-            }
-            catch (CommandParsingException)
-            {
-                app.ShowHelp();
-                return 1;
-            }
+            //var dirPathOption = app.Option("-p|--path", "The path to the folder to be watched",
+            //    CommandOptionType.SingleValue);
+
+            //app.OnExecute(async () =>
+            //{
+            //    var dirPath = dirPathOption.Value();
+            //    if (dirPath == null)
+            //    {
+            //        dirPath = Directory.GetCurrentDirectory();
+            //    }
+
+            //    var extensions = new[] { ".mkv", ".mp4" };
+            //    var command = new InvokeHandbrakeCommand(extensions, 500*1024);
+            //    command.ExecutionStatusChanged += ExecutionStatusChangedCallback;
+            //    var watcher = new CommandExecutingDirectoryWatcher(dirPath, command);
+            //    Console.WriteLine($"Watching {dirPath}...");
+            //    await watcher.Watch().ConfigureAwait(true);
+
+            //    return 0;
+            //});
+
+            //try
+            //{
+            //    return app.Execute(args);
+            //}
+            //catch (CommandParsingException)
+            //{
+            //    app.ShowHelp();
+            //    return 1;
+            //}
         }
 
         private static void ExecutionStatusChangedCallback(object obj, EventArgs args)
@@ -68,6 +80,18 @@ namespace AutoConverter
         private static string GetTimestamp()
         {
             return $"[{DateTime.Now.ToShortTimeString()}]";
+        }
+
+        private static AutoConverterConfig GetConfiguration(string[] args)
+        {
+            var config = new ConfigurationBuilder()
+                .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "config.json"))
+                .AddCommandLine(args)
+                .Build();
+
+            var ret = new AutoConverterConfig();
+            config.Bind(ret);
+            return ret;
         }
     }
 }

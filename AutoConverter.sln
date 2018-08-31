@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher", "DirectoryWatcher\DirectoryWatcher.csproj", "{3555867F-20D0-4CBE-AB6A-95A1DBC3770E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcher.UnitTests", "DirectoryWatcher.UnitTests\DirectoryWatcher.UnitTests.csproj", "{509ECE43-1CA7-41A7-98E2-587BDABEDDC2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DirectoryWatcherTests", "DirectoryWatcher.Tests\DirectoryWatcher.Tests.csproj", "{509ECE43-1CA7-41A7-98E2-587BDABEDDC2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoConverter.Tests", "AutoConverter.Tests\AutoConverter.Tests.csproj", "{65BD9A1F-16DF-476C-A822-E9DCA58A6363}"
 EndProject
