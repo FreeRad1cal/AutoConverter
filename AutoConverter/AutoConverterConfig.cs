@@ -12,5 +12,9 @@ namespace AutoConverter
         public string HandbrakeCliPath { get; set; }
 
         public IEnumerable<string> Extensions { get; set; }
+
+        public int MinKb { get; set; }
+
+        public int Quality { get; set; }
     }
 }

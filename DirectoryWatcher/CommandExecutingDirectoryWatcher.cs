@@ -10,16 +10,16 @@ namespace DirectoryWatcher
 {
     public class CommandExecutingDirectoryWatcher : IDirectoryWatcher
     {
-        private string _root;
-        private ICommand _command;
-        private CancellationTokenSource _cts;
-        private ICommandProcessor _processor;
-        private object _syncRoot = new object();
+        private readonly string _root;
+        private readonly ICommand _command;
+        private readonly CancellationTokenSource _cts;
+        private readonly ICommandProcessor _processor;
+        private readonly object _syncRoot = new object();
 
         public CommandExecutingDirectoryWatcher(string root, ICommand command)
         {
             if (!Directory.Exists(root))
-                throw new ArgumentException($"The directory {root} does not exist", "root");
+                throw new ArgumentException($"The directory {root} does not exist", nameof(root));
 
             _root = root;
             _command = command;

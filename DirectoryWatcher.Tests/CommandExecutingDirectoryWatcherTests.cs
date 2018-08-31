@@ -1,21 +1,30 @@
 using System;
-using Common;
-using Moq;
-using Xunit;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.IO;
+using AutoConverter;
+using Common;
+using DirectoryWatcher.UnitTests;
+using Moq;
+using Xunit;
 
-namespace DirectoryWatcher.UnitTests
+namespace DirectoryWatcher.Tests
 {
     public class CommandExecutingDirectoryWatcherTests
     {
+        public CommandExecutingDirectoryWatcherTests()
+        {
+            Config = AutoConverter.AutoConverter.GetConfiguration(new string[] { });
+        }
+
+        public AutoConverterConfig Config { get; }
+
         [Fact]
         public void SutImplementsIDirectoryWatcher()
         {
             //Fixture setup
             var commandDummy = new Mock<ICommand>();
-            var sut = new CommandExecutingDirectoryWatcher(Directory.GetCurrentDirectory(), commandDummy.Object);
+            var sut = new CommandExecutingDirectoryWatcher(Config.WatchedPath, commandDummy.Object);
             //Exercise system
             //Verify outcome
             Assert.IsAssignableFrom<IDirectoryWatcher>(sut);
@@ -30,7 +39,7 @@ namespace DirectoryWatcher.UnitTests
             commandStub
                 .Setup(command => command.ExecuteAsync(It.IsAny<object>()))
                 .Returns(Task.CompletedTask);
-            var sut = new CommandExecutingDirectoryWatcher(Directory.GetCurrentDirectory(), commandStub.Object);
+            var sut = new CommandExecutingDirectoryWatcher(Config.WatchedPath, commandStub.Object);
             //Exercise system
             var task = sut.Watch();
             await sut.Cancel().ConfigureAwait(true);
@@ -46,7 +55,7 @@ namespace DirectoryWatcher.UnitTests
         {
             //Fixture setup
             var commandDummy = new Mock<ICommand>();
-            var sut = new CommandExecutingDirectoryWatcher(Directory.GetCurrentDirectory(), commandDummy.Object);
+            var sut = new CommandExecutingDirectoryWatcher(Config.WatchedPath, commandDummy.Object);
             //Exercise system
             var task = sut.Watch();
             await Task.Delay(1000);
@@ -77,10 +86,10 @@ namespace DirectoryWatcher.UnitTests
             commandStub
                 .Setup(command => command.Execute(It.IsAny<object>()))
                 .Callback(() => executeCalled = true);
-            var sut = new CommandExecutingDirectoryWatcher(Directory.GetCurrentDirectory(), commandStub.Object);
+            var sut = new CommandExecutingDirectoryWatcher(Config.WatchedPath, commandStub.Object);
             //Exercise system
             var task = sut.Watch();
-            using (new TestFileSource(Path.Combine(Directory.GetCurrentDirectory(), "test.mkv"),
+            using (new TestFileSource(Path.Combine(Config.WatchedPath, "test.mkv"),
                 500 * 1024 * 1024))
             {
                 await sut.Cancel();
@@ -108,7 +117,7 @@ namespace DirectoryWatcher.UnitTests
             commandStub
                 .Setup(command => command.CanExecute(It.IsAny<object>()))
                 .Callback(() => canExecuteCalled = true);
-            var sut = new CommandExecutingDirectoryWatcher(Directory.GetCurrentDirectory(), commandStub.Object);
+            var sut = new CommandExecutingDirectoryWatcher(Config.WatchedPath, commandStub.Object);
             //Exercise system
             var task = sut.Watch();
             await Task.Delay(1000);

@@ -4,5 +4,7 @@
   "Extensions": [
     ".mp4",
     ".mkv"
-  ]
+  ],
+  "MinKb": 500,
+  "Quality":  18
 }

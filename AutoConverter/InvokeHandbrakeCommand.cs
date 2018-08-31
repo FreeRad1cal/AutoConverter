@@ -13,11 +13,12 @@ namespace AutoConverter
     public class InvokeHandbrakeCommand : ICommand
     {
         private readonly IEnumerable<string> _extensions;
-        private readonly uint _minBytes;
+        private readonly int _minBytes;
         private readonly string _handbrakeCliPath;
+        private readonly int _quality;
         private readonly IPathProjection _pathProjection;
 
-        public InvokeHandbrakeCommand(IEnumerable<string> extensions, uint minBytes, string handbrakeCliPath)
+        public InvokeHandbrakeCommand(IEnumerable<string> extensions, int minBytes, string handbrakeCliPath, int quality)
         {
             if (extensions == null || !extensions.Any())
             {
@@ -27,6 +28,7 @@ namespace AutoConverter
             _extensions = extensions.ToArray();
             _minBytes = minBytes;
             _handbrakeCliPath = handbrakeCliPath;
+            _quality = quality;
             _pathProjection = new FilenameAppendPathProjection("__CONVERTED__");
         }
 
@@ -55,7 +57,7 @@ namespace AutoConverter
 
             var fileInfo = (FileInfo)context;
             var startInfo = new ProcessStartInfo(_handbrakeCliPath,
-                $"-i \"{fileInfo.FullName}\" -o \"{_pathProjection.GetPath(fileInfo.FullName)}\"")
+                $"-i \"{fileInfo.FullName}\" -o \"{_pathProjection.GetPath(fileInfo.FullName)}\" -q {_quality}")
             {
                 CreateNoWindow = true,
                 UseShellExecute = true

@@ -13,27 +13,27 @@ using System.Collections.Generic;
 
 namespace AutoConverter.Tests
 {
-    public class InvokeHandbrakeCommandTests : IClassFixture<CommandFixture>
+    public class InvokeHandbrakeCommandTests : IClassFixture<AutoConverterTestFixture>
     {
-        public CommandFixture CommandFixture { get; }
+        public AutoConverterTestFixture Fixture { get; }
 
-        public InvokeHandbrakeCommandTests(CommandFixture commandFixture)
+        public InvokeHandbrakeCommandTests(AutoConverterTestFixture fixture)
         {
-            CommandFixture = commandFixture;
+            Fixture = fixture;
         }
 
         [Fact]
         public void InvokeHandbrakeCommandIsICommand()
         {
-            var sut = CommandFixture.Command;
+            var sut = Fixture.Command;
             Assert.IsAssignableFrom<ICommand>(sut);
         }
 
         [Fact]
         public void ConstructorThrowsOnNullOrEmptyArray()
         {
-            Assert.Throws<ArgumentException>(() => new InvokeHandbrakeCommand(new string[] { }, 100));
-            Assert.Throws<ArgumentException>(() => new InvokeHandbrakeCommand(null, 100));
+            Assert.Throws<ArgumentException>(() => new InvokeHandbrakeCommand(new string[] { }, 100, "c:/handbrakecli/handbrakecli.exe", 18));
+            Assert.Throws<ArgumentException>(() => new InvokeHandbrakeCommand(null, 100, "c:/handbrakecli/handbrakecli.exe", 18));
         }
 
         [Theory]
@@ -43,7 +43,7 @@ namespace AutoConverter.Tests
         [InlineData("test.mkv")]
         public void CanExecuteReturnsTrueForValidExtensions(string filename)
         {
-            var sut = CommandFixture.Command;
+            var sut = Fixture.Command;
             var path = Path.Combine(Directory.GetCurrentDirectory(), filename);
             Assert.True(sut.CanExecute(new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), path))));
         }
@@ -51,7 +51,7 @@ namespace AutoConverter.Tests
         [Fact]
         public void CanExecuteReturnsFalseForFileNamesWithAppendedStringBeforeExtension()
         {
-            var sut = CommandFixture.Command;
+            var sut = Fixture.Command;
             Assert.False(sut.CanExecute(new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "test__CONVERTED__.mp4"))));
         }
 
@@ -60,7 +60,7 @@ namespace AutoConverter.Tests
         [InlineData("te__CONVERTED__st.mp4")]
         public void CanExecuteReturnsTrueWhenAppendedStringIsNotLocatedBeforeExtension(string filename)
         {
-            var sut = CommandFixture.Command;
+            var sut = Fixture.Command;
             var path = Path.Combine(Directory.GetCurrentDirectory(), filename);
             Assert.False(sut.CanExecute(new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), path))));
         }
@@ -71,7 +71,7 @@ namespace AutoConverter.Tests
         [InlineData("")]
         public void CanExecuteReturnsFalseForInvalidExtensions(string ext)
         {
-            var sut = CommandFixture.Command;
+            var sut = Fixture.Command;
             var path = Path.Combine(Directory.GetCurrentDirectory(), $"test{ext}");
             Assert.False(sut.CanExecute(new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), path))));
         }
@@ -85,7 +85,7 @@ namespace AutoConverter.Tests
         [InlineData(500)]
         public void CanExecuteReturnsFalseForSizeBelowCutoff(int size)
         {
-            var sut = CommandFixture.Command;
+            var sut = Fixture.Command;
             var path = Path.Combine(Directory.GetCurrentDirectory(), $"test{size}.mkv");
             if (size < 500)
             {
@@ -101,7 +101,7 @@ namespace AutoConverter.Tests
         [UseTestFile("test.mkv", 1000)]
         public async Task ExecuteAsyncDoesNotInvokeProcessWhenCancelledCancellationTokenProvided()
         {
-            var sut = CommandFixture.Command;
+            var sut = Fixture.Command;
             var path = Path.Combine(Directory.GetCurrentDirectory(), "test.mkv");
             var pathCreated = Path.Combine(Directory.GetCurrentDirectory(), "test__CONVERTED__.mkv");
             var cts = new CancellationTokenSource();
@@ -124,9 +124,9 @@ namespace AutoConverter.Tests
         [UseTestFile("test.mkv", 1000)]
         public async Task ExecuteAsyncInvokesProcessCorrectly()
         {
-            var sut = CommandFixture.Command;
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "test.mkv");
-            var pathCreated = Path.Combine(Directory.GetCurrentDirectory(), "test__CONVERTED__.mkv");
+            var sut = Fixture.Command;
+            var path = Path.Combine(Fixture.Config.WatchedPath, "test.mkv");
+            var pathCreated = Path.Combine(Fixture.Config.WatchedPath, "test__CONVERTED__.mkv");
             await sut.ExecuteAsync(new FileInfo(path), CancellationToken.None);
             Assert.True(File.Exists(pathCreated));
 
@@ -137,8 +137,8 @@ namespace AutoConverter.Tests
         [UseTestFile("test.mkv", 1000)]
         public async Task ExecutionStatusChangedEventTriggeredWhenProcessStarted()
         {
-            var sut = CommandFixture.Command;
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "test.mkv");
+            var sut = Fixture.Command;
+            var path = Path.Combine(Fixture.Config.WatchedPath, "test.mkv");
             bool eventTriggered = false;
             sut.ExecutionStatusChanged += (obj, args) =>
             {
@@ -149,7 +149,7 @@ namespace AutoConverter.Tests
                 }
             };
 
-            foreach (var i in Enumerable.Range(0, 50))
+            foreach (var i in Enumerable.Range(0, 5))
             {
                 eventTriggered = false;
                 var task = sut.ExecuteAsync(new FileInfo(path), CancellationToken.None);
@@ -163,7 +163,7 @@ namespace AutoConverter.Tests
         [UseTestFile("test.mkv", 1000)]
         public async Task ExecutionStatusChangedEventTriggeredWhenProcessCancelled()
         {
-            var sut = CommandFixture.Command;
+            var sut = Fixture.Command;
             var path = Path.Combine(Directory.GetCurrentDirectory(), "test.mkv");
             
             foreach (var i in Enumerable.Range(0, 50))
@@ -187,11 +187,11 @@ namespace AutoConverter.Tests
         [UseTestFile("test.mkv", 1000)]
         public async Task ExecutionStatusChangedEventTriggeredWhenProcessCompletes()
         {
-            var sut = CommandFixture.Command;
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "test.mkv");
-            var pathCreated = Path.Combine(Directory.GetCurrentDirectory(), "test__CONVERTED__.mkv");
+            var sut = Fixture.Command;
+            var path = Path.Combine(Fixture.Config.WatchedPath, "test.mkv");
+            var pathCreated = Path.Combine(Fixture.Config.WatchedPath, "test__CONVERTED__.mkv");
 
-            foreach (var i in Enumerable.Range(0, 50))
+            foreach (var i in Enumerable.Range(0, 5))
             {
                 var calls = new List<ExecutionEvent>();
                 sut.ExecutionStatusChanged += (obj, args) =>

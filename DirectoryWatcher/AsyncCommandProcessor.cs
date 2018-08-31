@@ -10,8 +10,8 @@ namespace DirectoryWatcher
 {
     internal class AsyncCommandProcessor : ICommandProcessor
     {
-        private BufferBlock<object> _head;
-        private ActionBlock<object> _tail;
+        private readonly BufferBlock<object> _head;
+        private readonly ActionBlock<object> _tail;
 
         public Task Completion => _tail.Completion;
 

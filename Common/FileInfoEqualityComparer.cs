@@ -6,10 +6,8 @@ namespace Common
 {
     public sealed class FileInfoEqualityComparer: EqualityComparer<FileInfo>
     {
-        private static FileInfoEqualityComparer _instance = new FileInfoEqualityComparer();
+        public static FileInfoEqualityComparer Instance { get; } = new FileInfoEqualityComparer();
 
-        public static FileInfoEqualityComparer Instance => _instance;
-        
         private FileInfoEqualityComparer() { }
 
         public override bool Equals(FileInfo x, FileInfo y)

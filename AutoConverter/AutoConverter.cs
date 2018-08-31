@@ -4,16 +4,22 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 
 namespace AutoConverter
 {
-    class AutoConverter
+    public class AutoConverter
     {
+        public static ILogger ConsoleLogger { get; } = new LoggerFactory()
+            .AddConsole()
+            .CreateLogger(nameof(AutoConverter));
+
         public static async Task Main(string[] args)
         {
             var config = GetConfiguration(args);
 
-            var command = new InvokeHandbrakeCommand(config.Extensions, 500 * 1024, config.HandbrakeCliPath);
+            var command = new InvokeHandbrakeCommand(config.Extensions, config.MinKb * 1024, config.HandbrakeCliPath, config.Quality);
             command.ExecutionStatusChanged += ExecutionStatusChangedCallback;
 
             var watcher = new CommandExecutingDirectoryWatcher(config.WatchedPath, command);
@@ -64,25 +70,18 @@ namespace AutoConverter
             switch (executionStatusChangedEventArgs.ConversionEvent)
             {
                 case ExecutionEvent.Started:
-                    Console.WriteLine($"{GetTimestamp()} Converting {executionStatusChangedEventArgs.Path}...");
+                    ConsoleLogger.LogInformation($"Converting {executionStatusChangedEventArgs.Path}...");
                     break;
                 case ExecutionEvent.Completed:
-                    Console.WriteLine($"{GetTimestamp()} Conversion of {executionStatusChangedEventArgs.Path} completed");
+                    ConsoleLogger.LogInformation($"Conversion of {executionStatusChangedEventArgs.Path} completed");
                     break;
                 case ExecutionEvent.Cancelled:
-                    Console.WriteLine($"{GetTimestamp()} Conversion of {executionStatusChangedEventArgs.Path} cancelled");
-                    break;
-                default:
+                    ConsoleLogger.LogInformation($"Conversion of {executionStatusChangedEventArgs.Path} cancelled");
                     break;
             }
         }
 
-        private static string GetTimestamp()
-        {
-            return $"[{DateTime.Now.ToShortTimeString()}]";
-        }
-
-        private static AutoConverterConfig GetConfiguration(string[] args)
+        public static AutoConverterConfig GetConfiguration(string[] args)
         {
             var config = new ConfigurationBuilder()
                 .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "config.json"))
