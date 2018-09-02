@@ -1,5 +1,5 @@
 # AutoConverter
-A simple console application that watches a list of folders for new files with certain extensions, and automatically converts any new files by invoking handbrakecli.exe with the specified arguments. The configuration is provided in the config.json in the application root:
+A simple console application that watches a list of folders for new files with certain extensions, and automatically converts any new files by invoking handbrakecli.exe with the specified arguments. The configuration is provided in the config.json file in the application root:
 ```json
 {
   "WatchedPaths": [
