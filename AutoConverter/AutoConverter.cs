@@ -2,6 +2,7 @@
 using DirectoryWatcher;
 using System;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -9,9 +10,9 @@ using Microsoft.Extensions.Logging.Console;
 
 namespace AutoConverter
 {
-    public class AutoConverter
+    public static class AutoConverter
     {
-        public static ILogger ConsoleLogger { get; } = new LoggerFactory()
+        private static ILogger ConsoleLogger { get; } = new LoggerFactory()
             .AddConsole()
             .CreateLogger(nameof(AutoConverter));
 
@@ -19,48 +20,23 @@ namespace AutoConverter
         {
             var config = GetConfiguration(args);
 
-            var command = new InvokeHandbrakeCommand(config.Extensions, config.MinKb * 1024, config.HandbrakeCliPath, config.Quality);
+            var command = new InvokeHandbrakeCommand(config);
             command.ExecutionStatusChanged += ExecutionStatusChangedCallback;
 
-            var watcher = new CommandExecutingDirectoryWatcher(config.WatchedPath, command);
-            Console.WriteLine($"Watching {config.WatchedPath}...");
+            var watcher = new CommandExecutingDirectoryWatcher(config.WatchedPaths, command);
 
-            await watcher.Watch().ConfigureAwait(true);
+            var stringBuilder = new StringBuilder();
+            stringBuilder.Append("Watching [");
+            foreach (var path in config.WatchedPaths)
+            {
+                stringBuilder.Append(path);
+                stringBuilder.Append(", ");
+            }
+            stringBuilder.Remove(stringBuilder.Length - 2, 2);
+            stringBuilder.Append(']');
+            ConsoleLogger.LogInformation(stringBuilder.ToString());
 
-            //var app = new CommandLineApplication(throwOnUnexpectedArg: true);
-
-            //app.HelpOption("-?|-h|--help");
-
-            //var dirPathOption = app.Option("-p|--path", "The path to the folder to be watched",
-            //    CommandOptionType.SingleValue);
-
-            //app.OnExecute(async () =>
-            //{
-            //    var dirPath = dirPathOption.Value();
-            //    if (dirPath == null)
-            //    {
-            //        dirPath = Directory.GetCurrentDirectory();
-            //    }
-
-            //    var extensions = new[] { ".mkv", ".mp4" };
-            //    var command = new InvokeHandbrakeCommand(extensions, 500*1024);
-            //    command.ExecutionStatusChanged += ExecutionStatusChangedCallback;
-            //    var watcher = new CommandExecutingDirectoryWatcher(dirPath, command);
-            //    Console.WriteLine($"Watching {dirPath}...");
-            //    await watcher.Watch().ConfigureAwait(true);
-
-            //    return 0;
-            //});
-
-            //try
-            //{
-            //    return app.Execute(args);
-            //}
-            //catch (CommandParsingException)
-            //{
-            //    app.ShowHelp();
-            //    return 1;
-            //}
+            await watcher.Watch(config.PollingFrequency).ConfigureAwait(true);
         }
 
         private static void ExecutionStatusChangedCallback(object obj, EventArgs args)

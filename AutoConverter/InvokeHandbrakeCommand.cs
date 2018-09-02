@@ -12,23 +12,12 @@ namespace AutoConverter
 {
     public class InvokeHandbrakeCommand : ICommand
     {
-        private readonly IEnumerable<string> _extensions;
-        private readonly int _minBytes;
-        private readonly string _handbrakeCliPath;
-        private readonly int _quality;
+        private readonly AutoConverterConfig _config;
         private readonly IPathProjection _pathProjection;
 
-        public InvokeHandbrakeCommand(IEnumerable<string> extensions, int minBytes, string handbrakeCliPath, int quality)
+        public InvokeHandbrakeCommand(AutoConverterConfig config)
         {
-            if (extensions == null || !extensions.Any())
-            {
-                throw new ArgumentException("Invalid input provided");
-            }
-
-            _extensions = extensions.ToArray();
-            _minBytes = minBytes;
-            _handbrakeCliPath = handbrakeCliPath;
-            _quality = quality;
+            _config = config;
             _pathProjection = new FilenameAppendPathProjection("__CONVERTED__");
         }
 
@@ -40,7 +29,7 @@ namespace AutoConverter
         public bool CanExecute(object context)
         {
             var fileInfo = (FileInfo)context;
-            return _extensions.Contains(fileInfo.Extension) && fileInfo.Exists && !Regex.IsMatch(fileInfo.Name, @"^.+__CONVERTED__\.\w+$") && fileInfo.Length >= _minBytes;
+            return _config.Extensions.Contains(fileInfo.Extension) && fileInfo.Exists && !Regex.IsMatch(fileInfo.Name, @"^.+__CONVERTED__\.\w+$") && fileInfo.Length >= _config.MinKb * 1024;
         }
 
         public async Task ExecuteAsync(object context)
@@ -56,8 +45,8 @@ namespace AutoConverter
             }
 
             var fileInfo = (FileInfo)context;
-            var startInfo = new ProcessStartInfo(_handbrakeCliPath,
-                $"-i \"{fileInfo.FullName}\" -o \"{_pathProjection.GetPath(fileInfo.FullName)}\" -q {_quality}")
+            var startInfo = new ProcessStartInfo(_config.HandbrakeCliPath,
+                $"-i \"{fileInfo.FullName}\" -o \"{_pathProjection.GetPath(fileInfo.FullName)}\" -q {_config.Quality}")
             {
                 CreateNoWindow = true,
                 UseShellExecute = true

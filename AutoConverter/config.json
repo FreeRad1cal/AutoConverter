@@ -1,5 +1,8 @@
 {
-  "WatchedPath": "c:/test",
+  "WatchedPaths": [
+    "c:/test",
+    "c:/test2"
+  ],
   "HandbrakeCliPath": "c:/handbrakecli/handbrakecli.exe",
   "Extensions": [
     ".mp4",

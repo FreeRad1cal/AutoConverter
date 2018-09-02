@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoConverter;
@@ -24,7 +25,7 @@ namespace DirectoryWatcher.Tests
         {
             //Fixture setup
             var commandDummy = new Mock<ICommand>();
-            var sut = new CommandExecutingDirectoryWatcher(Config.WatchedPath, commandDummy.Object);
+            var sut = new CommandExecutingDirectoryWatcher(Config.WatchedPaths, commandDummy.Object);
             //Exercise system
             //Verify outcome
             Assert.IsAssignableFrom<IDirectoryWatcher>(sut);
@@ -39,9 +40,9 @@ namespace DirectoryWatcher.Tests
             commandStub
                 .Setup(command => command.ExecuteAsync(It.IsAny<object>()))
                 .Returns(Task.CompletedTask);
-            var sut = new CommandExecutingDirectoryWatcher(Config.WatchedPath, commandStub.Object);
+            var sut = new CommandExecutingDirectoryWatcher(Config.WatchedPaths, commandStub.Object);
             //Exercise system
-            var task = sut.Watch();
+            var task = sut.Watch(1000);
             await sut.Cancel().ConfigureAwait(true);
 
             //Verify outcome
@@ -55,9 +56,9 @@ namespace DirectoryWatcher.Tests
         {
             //Fixture setup
             var commandDummy = new Mock<ICommand>();
-            var sut = new CommandExecutingDirectoryWatcher(Config.WatchedPath, commandDummy.Object);
+            var sut = new CommandExecutingDirectoryWatcher(Config.WatchedPaths, commandDummy.Object);
             //Exercise system
-            var task = sut.Watch();
+            var task = sut.Watch(1000);
             await Task.Delay(1000);
             //Verify outcome
             Assert.False(task.IsCanceled);
@@ -86,10 +87,10 @@ namespace DirectoryWatcher.Tests
             commandStub
                 .Setup(command => command.Execute(It.IsAny<object>()))
                 .Callback(() => executeCalled = true);
-            var sut = new CommandExecutingDirectoryWatcher(Config.WatchedPath, commandStub.Object);
+            var sut = new CommandExecutingDirectoryWatcher(Config.WatchedPaths, commandStub.Object);
             //Exercise system
-            var task = sut.Watch();
-            using (new TestFileSource(Path.Combine(Config.WatchedPath, "test.mkv"),
+            var task = sut.Watch(1000);
+            using (new TestFileSource(Path.Combine(Config.WatchedPaths.First(), "test.mkv"),
                 500 * 1024 * 1024))
             {
                 await sut.Cancel();
@@ -117,9 +118,9 @@ namespace DirectoryWatcher.Tests
             commandStub
                 .Setup(command => command.CanExecute(It.IsAny<object>()))
                 .Callback(() => canExecuteCalled = true);
-            var sut = new CommandExecutingDirectoryWatcher(Config.WatchedPath, commandStub.Object);
+            var sut = new CommandExecutingDirectoryWatcher(Config.WatchedPaths, commandStub.Object);
             //Exercise system
-            var task = sut.Watch();
+            var task = sut.Watch(1000);
             await Task.Delay(1000);
             await sut.Cancel();
             try
@@ -134,18 +135,15 @@ namespace DirectoryWatcher.Tests
         }
 
         [Fact]
-        public void ConstructorThrowsWhenInvalidDirectoryProvided()
+        public async Task ConstructorThrowsWhenInvalidDirectoryProvided()
         {
             var commandDummy = new Mock<ICommand>();
             var rand = new Random();
-            Assert.Throws<ArgumentException>(() => new CommandExecutingDirectoryWatcher($"/{rand.Next().ToString()}", commandDummy.Object));
-        }
-
-        [Fact]
-        public void ConstructorDoesNotThrowWhenValidDirectoryProvided()
-        {
-            var commandDummy = new Mock<ICommand>();
-            new CommandExecutingDirectoryWatcher(Directory.GetCurrentDirectory(), commandDummy.Object);
+            await Assert.ThrowsAsync<Exception>(async () =>
+            {
+                var watcher = new CommandExecutingDirectoryWatcher(new[] {rand.Next().ToString()}, commandDummy.Object);
+                await watcher.Watch(1000);
+            });
         }
     }
 }

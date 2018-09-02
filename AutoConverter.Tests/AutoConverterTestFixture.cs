@@ -11,7 +11,7 @@ namespace AutoConverter.Tests
         public AutoConverterTestFixture()
         {
             Config = AutoConverter.GetConfiguration(new string[] { });
-            _command = new InvokeHandbrakeCommand(Config.Extensions, Config.MinKb, Config.HandbrakeCliPath, Config.Quality);
+            _command = new InvokeHandbrakeCommand(Config);
         }
 
         public AutoConverterConfig Config { get; }

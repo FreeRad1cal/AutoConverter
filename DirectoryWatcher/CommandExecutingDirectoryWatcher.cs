@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
 using Common;
@@ -10,18 +11,15 @@ namespace DirectoryWatcher
 {
     public class CommandExecutingDirectoryWatcher : IDirectoryWatcher
     {
-        private readonly string _root;
+        private readonly IEnumerable<string> _paths;
         private readonly ICommand _command;
         private readonly CancellationTokenSource _cts;
         private readonly ICommandProcessor _processor;
         private readonly object _syncRoot = new object();
 
-        public CommandExecutingDirectoryWatcher(string root, ICommand command)
+        public CommandExecutingDirectoryWatcher(IEnumerable<string> paths, ICommand command)
         {
-            if (!Directory.Exists(root))
-                throw new ArgumentException($"The directory {root} does not exist", nameof(root));
-
-            _root = root;
+            _paths = paths;
             _command = command;
             _cts = new CancellationTokenSource();
             _processor = new AsyncCommandProcessor(_command, _cts.Token);
@@ -36,40 +34,51 @@ namespace DirectoryWatcher
             await _processor.Completion;
         }
 
-        public async Task Watch(int pollingFrequency = 1000)
+        public async Task Watch(int pollingFrequency)
         {
             var ct = _cts.Token;
-            var contents = GetCurrentContents();
 
+            var tasks = _paths
+                .Select(path => WatchDirectory(path, ct, pollingFrequency));
+
+            AppDomain.CurrentDomain.ProcessExit += (sender, args) => _cts.Cancel();
+            await Task.WhenAny(tasks);
+        }
+
+        private IEnumerable<FileInfo> GetCurrentContents(string path)
+        {
+            return Directory
+                .EnumerateFiles(path)
+                .Select(file => new FileInfo(file))
+                .ToArray();
+
+        }
+
+        private async Task WatchDirectory(string path, CancellationToken ct, int pollingFrequency)
+        {
             await Task.Run(async () =>
             {
+                var content = GetCurrentContents(path);
                 while (true)
                 {
                     lock (_syncRoot)
                     {
                         ct.ThrowIfCancellationRequested();
-                        var currentContents = GetCurrentContents();
-                        foreach (var file in currentContents.Except(contents, FileInfoEqualityComparer.Instance))
+                        var currentContents = GetCurrentContents(path);
+                        foreach (var file in currentContents.Except(content, FileInfoEqualityComparer.Instance))
                         {
                             if (_command.CanExecute(file))
                             {
                                 _processor.Process(file);
                             }
                         }
-                        contents = currentContents;
+
+                        content = currentContents;
                     }
-                    await Task.Delay(pollingFrequency);
+
+                    await Task.Delay(pollingFrequency, ct);
                 }
             }, ct);
-        }
-
-        private IEnumerable<FileInfo> GetCurrentContents()
-        {
-            return Directory
-                .EnumerateFiles(_root)
-                .Select(file => new FileInfo(file))
-                .ToArray();
-
         }
     }
 }

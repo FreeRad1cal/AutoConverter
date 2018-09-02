@@ -29,13 +29,6 @@ namespace AutoConverter.Tests
             Assert.IsAssignableFrom<ICommand>(sut);
         }
 
-        [Fact]
-        public void ConstructorThrowsOnNullOrEmptyArray()
-        {
-            Assert.Throws<ArgumentException>(() => new InvokeHandbrakeCommand(new string[] { }, 100, "c:/handbrakecli/handbrakecli.exe", 18));
-            Assert.Throws<ArgumentException>(() => new InvokeHandbrakeCommand(null, 100, "c:/handbrakecli/handbrakecli.exe", 18));
-        }
-
         [Theory]
         [UseTestFile("test.mp4", 1000)]
         [UseTestFile("test.mkv", 1000)]
@@ -125,8 +118,8 @@ namespace AutoConverter.Tests
         public async Task ExecuteAsyncInvokesProcessCorrectly()
         {
             var sut = Fixture.Command;
-            var path = Path.Combine(Fixture.Config.WatchedPath, "test.mkv");
-            var pathCreated = Path.Combine(Fixture.Config.WatchedPath, "test__CONVERTED__.mkv");
+            var path = Path.Combine(Fixture.Config.WatchedPaths.First(), "test.mkv");
+            var pathCreated = Path.Combine(Fixture.Config.WatchedPaths.First(), "test__CONVERTED__.mkv");
             await sut.ExecuteAsync(new FileInfo(path), CancellationToken.None);
             Assert.True(File.Exists(pathCreated));
 
@@ -138,7 +131,7 @@ namespace AutoConverter.Tests
         public async Task ExecutionStatusChangedEventTriggeredWhenProcessStarted()
         {
             var sut = Fixture.Command;
-            var path = Path.Combine(Fixture.Config.WatchedPath, "test.mkv");
+            var path = Path.Combine(Fixture.Config.WatchedPaths.First(), "test.mkv");
             bool eventTriggered = false;
             sut.ExecutionStatusChanged += (obj, args) =>
             {
@@ -188,8 +181,8 @@ namespace AutoConverter.Tests
         public async Task ExecutionStatusChangedEventTriggeredWhenProcessCompletes()
         {
             var sut = Fixture.Command;
-            var path = Path.Combine(Fixture.Config.WatchedPath, "test.mkv");
-            var pathCreated = Path.Combine(Fixture.Config.WatchedPath, "test__CONVERTED__.mkv");
+            var path = Path.Combine(Fixture.Config.WatchedPaths.First(), "test.mkv");
+            var pathCreated = Path.Combine(Fixture.Config.WatchedPaths.First(), "test__CONVERTED__.mkv");
 
             foreach (var i in Enumerable.Range(0, 5))
             {
